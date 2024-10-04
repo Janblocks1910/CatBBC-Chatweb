@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Chat</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #acb6e5);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      background: #42a5f5;
+      padding: 10px;
+      border-bottom: 2px solid #1e88e5;
+    }
+
+    .navbar button {
+      margin-left: 10px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: white;
+      color: #42a5f5;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .navbar button:hover {
+      background-color: #e3f2fd;
+    }
+
+    #online-users {
+      text-align: center;
+      margin: 0 auto;
+      font-weight: bold;
+      color: white;
+    }
+
+    .chat-container {
+      background: #ffffff;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    #chat {
+      list-style-type: none;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+
+    #chat li {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background: #e3f2fd;
+    }
+
+    #chat li:nth-child(odd) {
+      background: #bbdefb;
+    }
+
+    #message-container {
+      display: flex;
+      gap: 10px;
+    }
+
+    #message {
+      flex-grow: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    #username-input {
+      display: none;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div id="username-input">
+      <input type="text" id="username" placeholder="Gib deinen Namen ein" />
+      <button id="set-username">Einloggen</button>
+    </div>
+    <div id="online-users">Online Benutzer: 0</div>
+    <button id="logout" style="display:none;">Ausloggen</button>
+  </div>
+
+  <div class="chat-container">
+    <h2>Live Web Chat</h2>
+    <ul id="chat"></ul>
+    <div id="message-container">
+      <input id="message" placeholder="Gib deine Nachricht ein..." autocomplete="off" />
+      <button id="send" disabled>Senden</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+    var username = localStorage.getItem('username') || '';
+
+    function updateUI() {
+      if (username) {
+        document.getElementById('send').disabled = false;
+        document.getElementById('username-input').style.display = 'none';
+        document.getElementById('logout').style.display = 'inline-block';
+      } else {
+        document.getElementById('send').disabled = true;
+        document.getElementById('username-input').style.display = 'block';
+        document.getElementById('logout').style.display = 'none';
+      }
+    }
+
+    document.getElementById('set-username').onclick = function() {
+      const nameInput = document.getElementById('username').value;
+      if (nameInput) {
+        username = nameInput;
+        localStorage.setItem('username', username);
+        updateUI();
+        socket.emit('user connected', username);
+      } else {
+        alert('Bitte gib einen Nutzernamen ein');
+      }
+    };
+
+    document.getElementById('send').onclick = function() {
+      var message = document.getElementById('message').value;
+      if (message) {
+        socket.emit('chat message', { username: username, message: message });
+        document.getElementById('message').value = '';
+      }
+    };
+
+    document.getElementById('logout').onclick = function() {
+      socket.emit('user disconnected', username);
+      localStorage.removeItem('username');
+      username = '';
+      updateUI();
+    };
+
+    socket.on('chat message', function(data) {
+      var li = document.createElement('li');
+      li.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+      document.getElementById('chat').appendChild(li);
+    });
+
+    socket.on('user count', function(count) {
+      document.getElementById('online-users').innerText = `Online Benutzer: ${count}`;
+    });
+
+    updateUI();
+  </script>
+</body>
+</html>
