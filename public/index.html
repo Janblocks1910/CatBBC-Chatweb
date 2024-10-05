@@ -1,189 +1,215 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Chat</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Chat</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #74ebd5, #acb6e5);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+        body {
+            font-family: "Arial", sans-serif;
+            background: linear-gradient(135deg, #74ebd5, #acb6e5);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(8px); /* Geblurrter Hintergrund */
+        }
 
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      background: #42a5f5;
-      padding: 10px;
-      border-bottom: 2px solid #1e88e5;
-    }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(66, 165, 245, 0.8); /* Transparenter Hintergrund */
+            padding: 10px;
+            border-bottom: 2px solid #1e88e5;
+            z-index: 1000; /* Stellt sicher, dass die Navbar über anderen Elementen bleibt */
+        }
 
-    .navbar button {
-      margin-left: 10px;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      background-color: white;
-      color: #42a5f5;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
+        .navbar h1 {
+            font-size: 24px;
+            color: white;
+            margin-left: 10px;
+        }
 
-    .navbar button:hover {
-      background-color: #e3f2fd;
-    }
+        .navbar button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: white;
+            color: #42a5f5;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-    #online-users {
-      text-align: center;
-      margin: 0 auto;
-      font-weight: bold;
-      color: white;
-    }
+        .navbar button:hover {
+            background-color: #e3f2fd;
+        }
 
-    .chat-container {
-      background: #ffffff;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 500px;
-      padding: 20px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-      margin-top: 20px;
-    }
+        #online-users {
+            text-align: center;
+            font-weight: bold;
+            color: white;
+        }
 
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
-    }
+        .chat-container {
+            flex-grow: 1; /* Ermöglicht, dass der Container den verfügbaren Platz einnimmt */
+            padding: 20px;
+            margin-top: 60px; /* Abstand zur Navbar */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Verhindert Überlauf */
+        }
 
-    #chat {
-      list-style-type: none;
-      max-height: 300px;
-      overflow-y: auto;
-      margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      padding: 10px;
-      background: #f9f9f9;
-    }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
 
-    #chat li {
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      background: #e3f2fd;
-    }
+        #chat {
+            list-style-type: none;
+            flex-grow: 1; /* Ermöglicht, dass der Chat-Bereich wächst */
+            overflow-y: auto; /* Scrollen bei Überlauf */
+            margin-bottom: 20px;
+            padding: 10px;
+        }
 
-    #chat li:nth-child(odd) {
-      background: #bbdefb;
-    }
+        #chat li {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            color: #333;
+        }
 
-    #message-container {
-      display: flex;
-      gap: 10px;
-    }
+        /* Geblurrter Hintergrund für die Nachrichten */
+        #chat li {
+            backdrop-filter: blur(5px); /* Geblurrter Hintergrund */
+            position: relative;
+            z-index: 1; /* Z-Index, um sicherzustellen, dass die Nachrichten im Vordergrund sind */
+        }
 
-    #message {
-      flex-grow: 1;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-    }
+        /* Unterscheidbare Hintergründe für die Nachrichten der Benutzer */
+        .user-message {
+            background: rgba(255, 255, 255, 0.8); /* Weiß mit Transparenz */
+        }
 
-    #username-input {
-      display: none;
-      margin-bottom: 20px;
-    }
-  </style>
+        .other-message {
+            background: rgba(220, 220, 255, 0.8); /* Heller Lila mit Transparenz */
+        }
+
+        #message-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #message {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        #user-status {
+            color: white;
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="navbar">
-    <div id="username-input">
-      <input type="text" id="username" placeholder="Gib deinen Namen ein" />
-      <button id="set-username">Einloggen</button>
+    <div class="navbar">
+        <h1>Webchat</h1>
+        <div id="user-status">Du bist angemeldet als: <span id="username-display"></span></div>
+        <button id="logout-button" style="display: none;">Ausloggen</button>
+        <div id="online-users">Online Benutzer: 0</div>
+        <button id="login-button">Anmelden</button>
     </div>
-    <div id="online-users">Online Benutzer: 0</div>
-    <button id="logout" style="display:none;">Ausloggen</button>
-  </div>
 
-  <div class="chat-container">
-    <h2>Live Web Chat</h2>
-    <ul id="chat"></ul>
-    <div id="message-container">
-      <input id="message" placeholder="Gib deine Nachricht ein..." autocomplete="off" />
-      <button id="send" disabled>Senden</button>
+    <div class="chat-container">
+        <h2>Live Web Chat</h2>
+        <ul id="chat"></ul>
+        <div id="message-container">
+            <input
+                id="message"
+                placeholder="Gib deine Nachricht ein..."
+                autocomplete="off"
+            />
+            <button id="send" disabled>Senden</button>
+        </div>
     </div>
-  </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    var socket = io();
-    var username = localStorage.getItem('username') || '';
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var username = localStorage.getItem("username") || "";
+        var onlineUsersCount = document.getElementById("online-users");
+        var chatList = document.getElementById("chat");
 
-    function updateUI() {
-      if (username) {
-        document.getElementById('send').disabled = false;
-        document.getElementById('username-input').style.display = 'none';
-        document.getElementById('logout').style.display = 'inline-block';
-      } else {
-        document.getElementById('send').disabled = true;
-        document.getElementById('username-input').style.display = 'block';
-        document.getElementById('logout').style.display = 'none';
-      }
-    }
+        function updateUI() {
+            const usernameDisplay = document.getElementById("username-display");
+            if (username) {
+                document.getElementById("login-button").style.display = "none";
+                document.getElementById("logout-button").style.display = "inline";
+                usernameDisplay.innerText = username;
+                document.getElementById("send").disabled = false;
+            } else {
+                document.getElementById("login-button").style.display = "inline";
+                document.getElementById("logout-button").style.display = "none";
+                usernameDisplay.innerText = "";
+                document.getElementById("send").disabled = true;
+            }
+        }
 
-    document.getElementById('set-username').onclick = function() {
-      const nameInput = document.getElementById('username').value;
-      if (nameInput) {
-        username = nameInput;
-        localStorage.setItem('username', username);
+        document.getElementById("login-button").onclick = function () {
+            window.location.href = "login.html";
+        };
+
+        document.getElementById("logout-button").onclick = function () {
+            localStorage.removeItem("username");
+            username = "";
+            updateUI();
+        };
+
+        document.getElementById("send").onclick = function () {
+            sendMessage();
+        };
+
+        document.getElementById("message").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            var message = document.getElementById("message").value;
+            if (message) {
+                socket.emit("chat message", { username: username, message: message });
+                document.getElementById("message").value = "";
+            }
+        }
+
+        socket.on("chat message", function (data) {
+            var li = document.createElement("li");
+            li.classList.add(data.username === username ? 'user-message' : 'other-message'); // Unterschiedliche Hintergründe
+            li.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+            chatList.appendChild(li);
+        });
+
+        socket.on("online-users", function (count) {
+            onlineUsersCount.innerText = `Online Benutzer: ${count}`;
+        });
+
         updateUI();
-        socket.emit('user connected', username);
-      } else {
-        alert('Bitte gib einen Nutzernamen ein');
-      }
-    };
-
-    document.getElementById('send').onclick = function() {
-      var message = document.getElementById('message').value;
-      if (message) {
-        socket.emit('chat message', { username: username, message: message });
-        document.getElementById('message').value = '';
-      }
-    };
-
-    document.getElementById('logout').onclick = function() {
-      socket.emit('user disconnected', username);
-      localStorage.removeItem('username');
-      username = '';
-      updateUI();
-    };
-
-    socket.on('chat message', function(data) {
-      var li = document.createElement('li');
-      li.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
-      document.getElementById('chat').appendChild(li);
-    });
-
-    socket.on('user count', function(count) {
-      document.getElementById('online-users').innerText = `Online Benutzer: ${count}`;
-    });
-
-    updateUI();
-  </script>
+    </script>
 </body>
 </html>

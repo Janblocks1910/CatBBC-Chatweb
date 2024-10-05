@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anmelden</title>
+    <title>Registrieren</title>
     <style>
         /* Füge hier deinen CSS-Stil hinzu */
         * {
@@ -64,29 +64,29 @@
 </head>
 <body>
     <div class="container">
-        <h2>Anmelden</h2>
+        <h2>Registrieren</h2>
         <input type="text" id="username" placeholder="Benutzername" required>
         <input type="password" id="password" placeholder="Passwort" required>
-        <button id="login-button">Einloggen</button>
-        <div class="link">Hast du kein Konto? <a href="register.html">Registrieren</a></div>
+        <button id="register-button">Registrieren</button>
+        <div class="link">Hast du schon ein Konto? <a href="login.html">Einloggen</a></div>
     </div>
 
     <script>
-        document.getElementById("login-button").onclick = async function () {
+        document.getElementById("register-button").onclick = async function () {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
-            const response = await fetch("/login", {
+            const response = await fetch("/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username, password }),
             });
 
             if (response.ok) {
-                localStorage.setItem("username", username);
-                window.location.href = "index.html";
+                alert("Registrierung erfolgreich. Du kannst dich jetzt einloggen.");
+                window.location.href = "login.html";
             } else {
-                alert("Ungültiger Benutzername oder Passwort.");
+                alert("Fehler bei der Registrierung.");
             }
         };
     </script>
