@@ -17,7 +17,7 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            backdrop-filter: blur(8px); /* Geblurrter Hintergrund */
+            backdrop-filter: blur(8px);
         }
 
         .navbar {
@@ -28,10 +28,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(66, 165, 245, 0.8); /* Transparenter Hintergrund */
+            background: rgba(66, 165, 245, 0.8);
             padding: 10px;
             border-bottom: 2px solid #1e88e5;
-            z-index: 1000; /* Stellt sicher, dass die Navbar über anderen Elementen bleibt */
+            z-index: 1000;
         }
 
         .navbar h1 {
@@ -62,12 +62,12 @@
         }
 
         .chat-container {
-            flex-grow: 1; /* Ermöglicht, dass der Container den verfügbaren Platz einnimmt */
+            flex-grow: 1;
             padding: 20px;
-            margin-top: 60px; /* Abstand zur Navbar */
+            margin-top: 60px;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Verhindert Überlauf */
+            overflow: hidden;
         }
 
         h2 {
@@ -78,8 +78,8 @@
 
         #chat {
             list-style-type: none;
-            flex-grow: 1; /* Ermöglicht, dass der Chat-Bereich wächst */
-            overflow-y: auto; /* Scrollen bei Überlauf */
+            flex-grow: 1;
+            overflow-y: auto;
             margin-bottom: 20px;
             padding: 10px;
         }
@@ -89,22 +89,17 @@
             margin-bottom: 10px;
             border-radius: 5px;
             color: #333;
-        }
-
-        /* Geblurrter Hintergrund für die Nachrichten */
-        #chat li {
-            backdrop-filter: blur(5px); /* Geblurrter Hintergrund */
+            backdrop-filter: blur(5px);
             position: relative;
-            z-index: 1; /* Z-Index, um sicherzustellen, dass die Nachrichten im Vordergrund sind */
+            z-index: 1;
         }
 
-        /* Unterscheidbare Hintergründe für die Nachrichten der Benutzer */
         .user-message {
-            background: rgba(255, 255, 255, 0.8); /* Weiß mit Transparenz */
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .other-message {
-            background: rgba(220, 220, 255, 0.8); /* Heller Lila mit Transparenz */
+            background: rgba(220, 220, 255, 0.8);
         }
 
         #message-container {
@@ -133,6 +128,12 @@
         <button id="logout-button" style="display: none;">Ausloggen</button>
         <div id="online-users">Online Benutzer: 0</div>
         <button id="login-button">Anmelden</button>
+        <a href="https://www.youtube.com/@Jaen_Gaming69420" target="_blank">
+            <button>YouTube</button>
+        </a>
+        <a href="https://github.com/Janblocks1910" target="_blank">
+            <button>GitHub</button>
+        </a>
     </div>
 
     <div class="chat-container">
@@ -181,28 +182,38 @@
         };
 
         document.getElementById("send").onclick = function () {
-            sendMessage();
+            var messageInput = document.getElementById("message");
+            if (messageInput.value.trim()) {
+                socket.emit("chat message", {
+                    username: username,
+                    message: messageInput.value,
+                });
+                messageInput.value = "";
+            }
         };
 
         document.getElementById("message").addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
-                sendMessage();
+                document.getElementById("send").click();
             }
         });
 
-        function sendMessage() {
-            var message = document.getElementById("message").value;
-            if (message) {
-                socket.emit("chat message", { username: username, message: message });
-                document.getElementById("message").value = "";
-            }
-        }
-
         socket.on("chat message", function (data) {
             var li = document.createElement("li");
-            li.classList.add(data.username === username ? 'user-message' : 'other-message'); // Unterschiedliche Hintergründe
-            li.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+            li.classList.add("user-message");
+            li.textContent = `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}: ${data.username}: ${data.message}`;
             chatList.appendChild(li);
+            chatList.scrollTop = chatList.scrollHeight;
+        });
+
+        socket.on("chat history", function (chatHistory) {
+            chatHistory.forEach((entry) => {
+                var li = document.createElement("li");
+                li.classList.add("other-message");
+                li.textContent = `00:00: ${entry.username}: ${entry.message}`;
+                chatList.appendChild(li);
+            });
+            chatList.scrollTop = chatList.scrollHeight;
         });
 
         socket.on("online-users", function (count) {

@@ -13,40 +13,57 @@ app.use(express.json());
 app.use(express.static("public"));
 
 const passwordFilePath = path.join(__dirname, "data", "passwords.json");
+const chatHistoryFilePath = path.join(__dirname, "data", "chatHistory.json");
 
 // Stelle sicher, dass die passwords.json existiert
-fs.access(passwordFilePath, fs.constants.F_OK, (err) => {
-    if (err) {
+const ensurePasswordFileExists = () => {
+    if (!fs.existsSync(passwordFilePath)) {
         fs.writeFileSync(passwordFilePath, JSON.stringify({}));
     }
-});
+};
+
+const ensureChatHistoryFileExists = () => {
+    if (!fs.existsSync(chatHistoryFilePath)) {
+        fs.writeFileSync(chatHistoryFilePath, JSON.stringify([]));
+    }
+};
+
+ensurePasswordFileExists();
+ensureChatHistoryFileExists();
 
 // Erstelle einen neuen Chatverlauf-Textdatei beim Serverstart
 const createChatLogFile = () => {
     const date = new Date();
-    const formattedDate = date.toISOString().slice(0, 10); // YYYY-MM-DD
-    const formattedTime = date.toTimeString().slice(0, 5).replace(":", "_"); // HH_MM
+    const formattedDate = date.toISOString().slice(0, 10);
+    const formattedTime = date.toTimeString().slice(0, 5).replace(":", "_");
     const logFileName = `${formattedDate}_${formattedTime}_Textverlauf.txt`;
     return path.join(__dirname, logFileName);
 };
 
 const chatLogFilePath = createChatLogFile();
 
-// Bei jeder gesendeten Nachricht den Chatverlauf speichern
 io.on("connection", (socket) => {
+    const chatHistory = JSON.parse(fs.readFileSync(chatHistoryFilePath));
+    socket.emit("chat history", chatHistory);
+
     socket.on("chat message", (data) => {
         const timestamp = new Date().toISOString();
-        const logEntry = `${timestamp}: ${data.username}: ${data.message}\n`;
+        const logEntry = {
+            username: data.username,
+            message: data.message,
+            time: timestamp,
+        };
 
-        // Speichere die Nachricht in der Chatverlauf-Datei
-        fs.appendFile(chatLogFilePath, logEntry, (err) => {
+        fs.appendFile(chatLogFilePath, `${timestamp}: ${data.username}: ${data.message}\n`, (err) => {
             if (err) console.error("Fehler beim Schreiben in die Chatverlauf-Datei:", err);
         });
+
+        chatHistory.push(logEntry);
+        fs.writeFileSync(chatHistoryFilePath, JSON.stringify(chatHistory));
 
         io.emit("chat message", data);
     });
 
-    // Online Nutzer Zähler
     let onlineUsers = 0;
     onlineUsers++;
     io.emit("online-users", onlineUsers);
@@ -77,7 +94,11 @@ app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     const users = JSON.parse(fs.readFileSync(passwordFilePath));
 
-    if (!users[username] || !(await bcrypt.compare(password, users[username]))) {
+    if (!users[username]) {
+        return res.status(401).send("Dieser Account existiert nicht. Bitte registrieren Sie sich.");
+    }
+
+    if (!(await bcrypt.compare(password, users[username]))) {
         return res.status(401).send("Ungültiger Benutzername oder Passwort.");
     }
 
